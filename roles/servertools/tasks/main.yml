@@ -1,0 +1,57 @@
+# tasks file for servertools
+# Definir hostname baseado na distribuição
+- name: "Set hostname on Debian"
+  hostname:
+    name: "{{ hostname }}"
+  when: (ansible_facts['distribution'] == "Debian")
+  notify:
+    - addInHostsFile
+
+- name: "Set hostname on CentOS/AlmaLinux"
+  command: hostnamectl set-hostname "{{ hostname }}"
+  when: (ansible_facts['distribution'] in ["CentOS", "AlmaLinux"])
+  notify:
+    - AddInHostsFile
+
+- name: "Role: ServerTools softwares uteis para administração do servidor - Debian"
+  apt:
+    update_cache: yes # atualizar o package list
+    cache_valid_time: 3600 # 1 hora
+    name:
+      - vim
+      - iftop
+      - zip
+      - wget
+      - curl
+      - python3
+    state: latest
+  when: (ansible_facts['distribution'] == "Debian")
+
+- name: "Role: ServerTools softwares uteis para administração do servidor - RedHat"
+  yum:
+    update_cache: yes # atualizar o package list
+    name:
+      - vim
+      - zip
+      - wget
+      - curl
+      - python3
+      - yum-utils
+    state: latest
+  when: (ansible_facts['distribution'] in ["CentOS", "AlmaLinux"])
+  notify:
+    - Enable-Yum-Utils
+
+- name: "Permite tráfego http no firewalld do CentOS/AlmaLinux"
+  firewalld:
+    service: http
+    permanent: yes
+    state: enabled
+  when: (ansible_facts['distribution'] in ["CentOS", "AlmaLinux"])
+
+- name: "Disable SElinux em sistemas derivados do RedHat"
+  selinux:
+    state: disabled
+  when: (ansible_facts['distribution'] in ["CentOS", "AlmaLinux"])
+  notify:
+    - Restart-Server

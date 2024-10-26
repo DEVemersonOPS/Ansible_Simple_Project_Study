@@ -1,0 +1,7 @@
+---
+
+site_folder: "/var/www/emerson_local"
+site_url: "www.emerson.local"
+site_domain: "emerson.local"
+log_prefix: "emerson-local"
+php_version: "7.3"

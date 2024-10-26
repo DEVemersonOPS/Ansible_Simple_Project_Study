@@ -1,0 +1,80 @@
+# tasks file for mysql
+- name: "INSTALANDO MARIADB SERVER - DEBIAN"
+  apt:
+    name:
+      - mariadb-server
+      - python-pymysql
+    state: present
+  when: (ansible_facts['distribution'] == "Debian")
+
+- name: "INSTALANDO MARIADB SERVER - CENTOS"
+  yum:
+    name:
+      - mariadb-server
+      - python3-mysql
+    state: present
+  when: (ansible_facts['distribution'] in ["CentOS", "AlmaLinux"])
+
+- name: "INICIANDO MARIADB"
+  service:
+    name: "{{ 'mariadb' if ansible_facts['distribution'] in ['CentOS', 'AlmaLinux'] else 'mysql' }}"
+    state: started
+    enabled: yes
+
+- name: "CRIANDO UM BANCO DE DADOS PARA SER UTILIZADO PELO WORDPRESS - DEBIAN"
+  mysql_db:
+    login_user: root
+    login_password: "{{ mysql_root_password }}"
+    login_unix_socket: "/var/run/mysqld/mysqld.sock"
+    name: "{{ db_wp_name }}"
+    state: present
+  when: (ansible_facts['distribution'] == "Debian")
+
+- name: "CRIANDO UM BANCO DE DADOS PARA SER UTILIZADO PELO WORDPRESS - CENTOS"
+  mysql_db:
+    login_user: root
+    login_password: "{{ mysql_root_password }}"
+    name: "{{ db_wp_name }}"
+    state: present
+  when: (ansible_facts['distribution'] in ["CentOS", "AlmaLinux"])
+
+- name: "CRIA USUARIO E SENHA E ADICIONA TODOS OS PRIVILÉGIOS - DEBIAN"
+  mysql_user:
+    login_user: root
+    login_password: "{{ mysql_root_password }}"
+    login_unix_socket: "/var/run/mysqld/mysqld.sock"
+    name: "{{ db_wp_username }}"
+    password: "{{ db_wp_password }}"
+    priv: "{{ db_wp_name }}.*:ALL,GRANT"
+    host: "localhost"
+    state: present
+  when: (ansible_facts['distribution'] == "Debian")
+
+- name: "CRIA USUARIO E SENHA E ADICIONA TODOS OS PRIVILÉGIOS - CENTOS"
+  mysql_user:
+    login_user: root
+    login_password: "{{ mysql_root_password }}"
+    name: "{{ db_wp_username }}"
+    password: "{{ db_wp_password }}"
+    priv: "{{ db_wp_name }}.*:ALL,GRANT"
+    host: "localhost"
+    state: present
+  when: (ansible_facts['distribution'] in ["CentOS", "AlmaLinux"])
+
+- name: "REMOVER TODOS OS USUÁRIOS ANONIMOS - DEBIAN"
+  mysql_user:
+    name: ''
+    host_all: yes
+    state: absent
+    login_user: root 
+    login_password: "{{ mysql_root_password }}"
+  when: (ansible_facts['distribution'] == "Debian")
+
+- name: "REMOVER TODOS OS USUÁRIOS ANONIMOS - CENTOS"
+  mysql_user:
+    name: ''
+    host_all: yes
+    state: absent
+    login_user: root 
+    login_password: "{{ mysql_root_password }}"
+  when: (ansible_facts['distribution'] in ["CentOS", "AlmaLinux"])

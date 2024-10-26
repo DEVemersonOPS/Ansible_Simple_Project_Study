@@ -1,0 +1,28 @@
+---
+- name: "Instala o apache em distro derivadas do REDHAT"
+  yum:
+    name:
+      - httpd
+      - openssl
+    state: latest
+  when: (ansible_facts['distribution'] in ["CentOS", "AlmaLinux"])
+  notify:
+      - enableHttpd
+
+- name: "Cria diretorio VHOSTS - REDHAT "
+  file:
+      path: "/etc/httpd/vhost.d"
+      state: directory
+  when: (ansible_facts['distribution'] in ["CentOS", "AlmaLinux"])
+
+- name: "Cria virtual host com as configurações do site - REDHAT "
+  template:
+      src: templates/site.conf
+      dest: /etc/httpd/vhost.d/{{ log_prefix }}.conf
+  when: (ansible_facts['distribution'] in ["CentOS", "AlmaLinux"])
+  notify:
+    - addInHostsFile 
+    - addInHttpdFile 
+    - RestartHttpd
+    - InstallWordPress
+    - SetPermissionWp-CentOS

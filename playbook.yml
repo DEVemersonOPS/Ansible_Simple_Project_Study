@@ -1,0 +1,55 @@
+---
+- hosts: all
+  become: yes
+  gather_facts: yes
+
+  vars:
+    default_dir: /opt/custom
+    dict_dir: {
+      scripts: "{{ default_dir }}/scripts",
+      backup: "{{ default_dir }}/backup",
+      log: "{{ default_dir }}/log",
+      tmp: "{{ default_dir }}/tmp",
+    }
+  tasks:
+    - name: "INSTALA O PACOTE WGET NAS MAQUINAS CENTOS"
+      yum:
+        update_cache: yes
+        name: "wget"
+        state: present
+      when: (ansible_facts['distribution'] == "CentOS")
+
+    - name: "DEFINE NOVOS HOSTNAMES"
+      command: hostnamectl set-hostname "{{ hostname }}"
+      when: (ansible_facts['distribution'] in ["CentOS", "AlmaLinux"])
+
+    - name: "CRIA DIRETÓRIO PADRÃO NOS SERVIDORES"
+      file: 
+        path: "{{ item }}"
+        state: directory
+        owner: Emerson
+        group: Emerson
+      with_items:
+        - "{{ dict_dir.scripts }}"
+        - "{{ dict_dir.backup }}"
+        - "{{ dict_dir.log }}"
+        - "{{ dict_dir.tmp }}"
+
+
+    - name: "CRIA ARQUIVO SIMPLES"
+      file:
+        path: "{{ default_dir }}/teste.txt"
+        state: touch
+        owner: Emerson
+        group: Emerson
+        mode: 0755
+        modification_time: preserve
+        access_time: preserve
+
+    - name: "EXEMPLO DE REGISTER"
+      shell: "date -u"
+      register: linux_date
+
+    - name: "EXIBINDO REGISTER"
+      debug:
+        msg: "{{ linux_date.start }}"

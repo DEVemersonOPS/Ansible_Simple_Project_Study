@@ -1,0 +1,5 @@
+[debian]
+192.168.33.11 hostname=srv-debian-01
+
+[centos]
+192.168.33.12 hostname=srv-centos-01 ansible_python_interpreter=/usr/bin/python3
